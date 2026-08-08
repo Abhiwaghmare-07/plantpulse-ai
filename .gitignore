@@ -73,6 +73,8 @@ coverage.xml
 *.pkl
 *.pickle
 *.joblib
+!ml-service/models/*.pkl
+
 
 # Other large model artefacts
 *.h5
