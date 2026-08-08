@@ -11,13 +11,15 @@ and contains all data science artefacts — notebooks, trained models, and evalu
 ```
 ml-service/
 ├── notebooks/
-│   └── 01_eda.ipynb          ← Exploratory Data Analysis
+│   ├── 01_eda.ipynb          ← Exploratory Data Analysis
+│   └── 02_model_training.ipynb ← Model Training & Serialization
 ├── outputs/                  ← Saved plots from notebooks
-├── models/                   ← Trained model artefacts (gitignored *.pkl / *.joblib)
+├── models/                   ← Trained model artefacts (preprocessor & models)
 ├── requirements.txt          ← Python dependencies
 ├── venv/                     ← Virtual environment (gitignored)
 └── README.md                 ← This file
 ```
+
 
 ---
 
@@ -59,7 +61,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📓 Running the EDA Notebook
+## 📓 Running the Notebooks
 
 ### Option A — Jupyter Lab (recommended)
 
@@ -68,14 +70,20 @@ pip install -r requirements.txt
 jupyter lab
 ```
 
-Then navigate to `notebooks/01_eda.ipynb` and run all cells.
+Navigate to:
+- `notebooks/01_eda.ipynb` (Exploratory Data Analysis)
+- `notebooks/02_model_training.ipynb` (Model Training & Serialization)
 
 ### Option B — Execute headlessly (CI / scripted)
 
 ```bash
-jupyter nbconvert --to notebook --execute notebooks/01_eda.ipynb \
-    --output notebooks/01_eda_executed.ipynb
+# Run EDA Notebook
+jupyter nbconvert --to notebook --execute notebooks/01_eda.ipynb --inplace
+
+# Run Model Training Notebook
+jupyter nbconvert --to notebook --execute notebooks/02_model_training.ipynb --inplace
 ```
+
 
 ---
 
@@ -103,6 +111,41 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | `jupyter` | Interactive notebook environment |
 | `fastapi` / `uvicorn` | REST API framework and ASGI server |
 | `joblib` | Serialise and load trained models |
+
+---
+
+## 📈 Modeling Approach & Performance Metrics
+
+We train two models for comparison:
+1. **Logistic Regression (Baseline)**: A simple linear model to establish baseline performance.
+2. **XGBoost Classifier**: A high-performance gradient boosting tree model designed to capture complex non-linear relationships.
+
+### Preprocessing & Handling Imbalance
+- **Features Dropped**: `UDI`, `Product ID` (non-predictive identifiers).
+- **Encoding**: One-Hot Encoding applied to `Type` (machine quality type L, M, H).
+- **Scaling**: Numeric features standardized (`StandardScaler`).
+- **Class Imbalance**: Handled via SMOTE (Synthetic Minority Over-sampling Technique) applied **strictly to the training data** to avoid data leakage.
+
+### Final Results on Untouched Test Set
+
+#### 🛡️ Binary Failure Prediction (`failure_model.pkl`)
+- **Accuracy**: 98.00%
+- **Precision**: 67.07%
+- **Recall**: 80.88%
+- **F1-Score**: 73.33%
+*(Note: Recall and F1-score on the failure class are the primary evaluation metrics since catching failures is critical).*
+
+#### 🔬 Multi-Class Failure Root Cause Diagnostic (`failure_type_model.pkl`)
+Trained on failed instances (`Machine failure == 1`) to diagnose the specific type of failure:
+- **Overall Accuracy**: 86.76%
+
+**Per-Class Metrics:**
+- **Heat Dissipation Failure (HDF)**: Precision 85.19% | Recall 100.00% | F1 92.00%
+- **Power Failure (PWF)**: Precision 94.74% | Recall 100.00% | F1 97.30%
+- **Tool Wear Failure (TWF)**: Precision 85.71% | Recall 66.67% | F1 75.00%
+- **Overstrain Failure (OSF)**: Precision 76.92% | Recall 62.50% | F1 68.97%
+- **Other/Random Failure (Other)**: Precision 100.00% | Recall 100.00% | F1 100.00%
+
 
 ---
 
