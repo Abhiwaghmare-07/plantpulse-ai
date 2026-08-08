@@ -89,12 +89,67 @@ jupyter nbconvert --to notebook --execute notebooks/02_model_training.ipynb --in
 
 ## 🚀 Running the FastAPI Service
 
-> *The API will be scaffolded in a later development phase.*
+To start the ML prediction microservice locally, run:
 
 ```bash
-# Placeholder — to be implemented
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Make sure your virtual environment is active
+cd ml-service
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+
+Once running, the interactive Swagger documentation will be available at:  
+👉 **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**
+
+### 📡 API Endpoints
+
+#### 1 · Check Health status (`GET /health`)
+Verifies that the microservice is running and that all model binaries are correctly loaded into memory.
+```bash
+curl http://127.0.0.1:8000/health
+```
+**Response:**
+```json
+{
+  "status": "ok",
+  "models_loaded": true
+}
+```
+
+#### 2 · Get Prediction (`POST /predict`)
+Submits current machine sensor metrics to get failure risk predictions.
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{
+       "Air_temperature": 302.5,
+       "Process_temperature": 310.1,
+       "Rotational_speed": 1310.0,
+       "Torque": 54.0,
+       "Tool_wear": 190.0,
+       "Type": "L"
+     }'
+```
+**Response:**
+```json
+{
+  "status": "Critical",
+  "failure_probability": 0.9947,
+  "predicted_failure_type": "HDF",
+  "confidence": 0.996
+}
+```
+
+---
+
+## 🧪 Validating with Test Script
+
+A test validation script is included in `ml-service/test_api.py`. It submits healthy, borderline, and critical telemetry readings to the API and checks the output predictions.
+
+To execute the verification script (while the FastAPI server is running):
+```bash
+python test_api.py
+```
+
 
 ---
 
