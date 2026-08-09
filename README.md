@@ -182,6 +182,84 @@ The machine learning models are trained on the **AI4I 2020 Predictive Maintenanc
 
 ---
 
+## 📡 API Reference
+
+All Express API endpoints are prefixed with `/api` and served on **port 5000**.
+
+### System
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Server + MongoDB Atlas liveness probe |
+
+### Machines
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/machines` | Register a new machine (`machineId`, `name`, `type`) |
+| `GET` | `/api/machines` | List all machines with current status and last reading |
+| `GET` | `/api/machines/:machineId` | Get single machine details |
+| `DELETE` | `/api/machines/:machineId` | Remove a machine (admin/testing) |
+
+### Readings (Sensor Telemetry)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/readings` | Submit a sensor reading — calls ML service, saves result, updates machine status, auto-creates alert if Warning/Critical |
+| `GET` | `/api/readings/:machineId` | Fetch last 50 readings for a machine (sorted newest first) |
+
+**POST `/api/readings` request body:**
+```json
+{
+  "machineId": "MACHINE-001",
+  "air_temperature": 300.0,
+  "process_temperature": 310.0,
+  "rotational_speed": 1500.0,
+  "torque": 40.0,
+  "tool_wear": 50.0,
+  "type": "M"
+}
+```
+
+### Alerts
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/alerts` | List all alerts sorted newest first |
+| `GET` | `/api/alerts?acknowledged=false` | Filter to unacknowledged alerts only |
+| `PATCH` | `/api/alerts/:id/acknowledge` | Mark an alert as acknowledged |
+
+### Manual Prediction (Test Panel)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/predict/manual` | Run prediction on raw sensor values without saving to DB |
+
+**POST `/api/predict/manual` request body:**
+```json
+{
+  "Air_temperature": 300.0,
+  "Process_temperature": 310.0,
+  "Rotational_speed": 1500.0,
+  "Torque": 40.0,
+  "Tool_wear": 50.0,
+  "Type": "M"
+}
+```
+
+**Prediction response shape:**
+```json
+{
+  "status": "Healthy | Warning | Critical",
+  "failure_probability": 0.12,
+  "predicted_failure_type": "HDF | PWF | OSF | TWF | null",
+  "confidence": 0.87
+}
+```
+
+---
+
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
