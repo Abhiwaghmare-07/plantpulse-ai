@@ -4,10 +4,11 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 
 // Route imports
-const machineRoutes  = require('./routes/machineRoutes');
-const readingRoutes  = require('./routes/readingRoutes');
-const alertRoutes    = require('./routes/alertRoutes');
-const predictRoutes  = require('./routes/predictRoutes');
+const machineRoutes   = require('./routes/machineRoutes');
+const readingRoutes   = require('./routes/readingRoutes');
+const alertRoutes     = require('./routes/alertRoutes');
+const predictRoutes   = require('./routes/predictRoutes');
+const simulatorRoutes = require('./routes/simulatorRoutes');
 
 const app = express();
 
@@ -34,10 +35,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/machines', machineRoutes);
-app.use('/api/readings', readingRoutes);
-app.use('/api/alerts',   alertRoutes);
-app.use('/api/predict',  predictRoutes);
+app.use('/api/machines',   machineRoutes);
+app.use('/api/readings',   readingRoutes);
+app.use('/api/alerts',     alertRoutes);
+app.use('/api/predict',    predictRoutes);
+app.use('/api/simulator',  simulatorRoutes);
 
 // Root Route
 app.get('/', (req, res) => {
