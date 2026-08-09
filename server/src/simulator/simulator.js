@@ -17,6 +17,11 @@ const { createReading } = require('../controllers/readingController');
 
 const INTERVAL_MS = parseInt(process.env.SIMULATOR_INTERVAL_MS || '5000', 10);
 
+// How many consecutive ticks Gamma must stay at Critical (tool_wear >= 240)
+// before it auto-resets to its healthy baseline for a fresh demo cycle.
+// 12 ticks × 5 s = 60 seconds at Critical, then resets.
+const GAMMA_CRITICAL_TICKS_BEFORE_RESET = 12;
+
 // Realistic baseline values drawn from the AI4I 2020 dataset distributions
 const DEMO_MACHINES = [
   {
@@ -53,6 +58,9 @@ const DEMO_MACHINES = [
 // ─── In-memory state for each machine ─────────────────────────────────────────
 
 const state = {};
+
+// Tracks how many consecutive ticks SIM-GAMMA-03 has been at Critical
+let gammaCriticalTicks = 0;
 
 function initState(cfg) {
   state[cfg.machineId] = { ...cfg.baseline };
@@ -108,11 +116,33 @@ function nextSensorValues(machineId, trajectory) {
   const s = state[machineId];
   let next;
 
+  // ── Gamma auto-reset logic ───────────────────────────────────────────────
+  // After GAMMA_CRITICAL_TICKS_BEFORE_RESET consecutive ticks with tool_wear
+  // at or above 240 (effectively maxed), snap back to the healthy baseline so
+  // the Healthy → Warning → Critical degradation cycle repeats automatically.
+  if (machineId === 'SIM-GAMMA-03' && trajectory === 'degrading') {
+    if (s.tool_wear >= 240) {
+      gammaCriticalTicks++;
+      if (gammaCriticalTicks >= GAMMA_CRITICAL_TICKS_BEFORE_RESET) {
+        // Find Gamma's original config to restore its baseline
+        const gammaCfg = DEMO_MACHINES.find(m => m.machineId === 'SIM-GAMMA-03');
+        state[machineId] = { ...gammaCfg.baseline };
+        gammaCriticalTicks = 0;
+        console.log('  🔄 [SIM-GAMMA-03] Auto-reset → Healthy baseline (demo cycle restart)');
+        return { ...gammaCfg.baseline };
+      }
+    } else {
+      // Not yet at Critical ceiling — reset the counter
+      gammaCriticalTicks = 0;
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   switch (trajectory) {
-    case 'healthy':  next = applyHealthyNoise(s);    break;
-    case 'degrading': next = applyDegradingDrift(s); break;
-    case 'critical':  next = applyCriticalDrift(s);  break;
-    default:         next = applyHealthyNoise(s);
+    case 'healthy':   next = applyHealthyNoise(s);    break;
+    case 'degrading': next = applyDegradingDrift(s);  break;
+    case 'critical':  next = applyCriticalDrift(s);   break;
+    default:          next = applyHealthyNoise(s);
   }
 
   // Clamp to realistic bounds from the dataset
