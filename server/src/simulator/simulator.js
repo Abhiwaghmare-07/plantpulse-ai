@@ -38,7 +38,8 @@ const DEMO_MACHINES = [
     name: 'Gamma Lathe Unit',
     type: 'M',
     trajectory: 'degrading',
-    baseline: { air_temperature: 301.5, process_temperature: 311.0, rotational_speed: 1480, torque: 44.0, tool_wear: 80 },
+    // Baseline starts slightly higher so Warning threshold is crossed within ~20-30 ticks
+    baseline: { air_temperature: 301.5, process_temperature: 311.5, rotational_speed: 1475, torque: 46.0, tool_wear: 100 },
   },
   {
     machineId: 'SIM-DELTA-04',
@@ -75,14 +76,16 @@ function applyHealthyNoise(s) {
   };
 }
 
-/** Apply steady degradation — tool_wear and torque climb each tick */
+/** Apply steady degradation — tool_wear and torque climb each tick.
+ *  Rates tuned so Gamma crosses Healthy→Warning→Critical in ~24-36 ticks (2-3 min).
+ */
 function applyDegradingDrift(s) {
   return {
     air_temperature:     s.air_temperature     + jitter(0.6),
-    process_temperature: s.process_temperature + jitter(0.5) + 0.08, // slight thermal rise
-    rotational_speed:    s.rotational_speed     + jitter(10)  - 1.5,  // slight RPM drop
-    torque:              s.torque               + jitter(1.2) + 0.6,  // torque creep
-    tool_wear:           s.tool_wear            + jitter(1.0) + 3,    // wear accumulates
+    process_temperature: s.process_temperature + jitter(0.5) + 0.18, // thermal creep
+    rotational_speed:    s.rotational_speed     + jitter(10)  - 3.5,  // RPM drop
+    torque:              s.torque               + jitter(1.2) + 1.2,  // torque creep (2× faster)
+    tool_wear:           s.tool_wear            + jitter(1.0) + 8,    // wear accumulates fast
   };
 }
 
