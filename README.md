@@ -155,16 +155,39 @@ npm start
 
 ---
 
-### 3 · Client Setup (React)
+### 3 · Client Setup (React / Vite)
 
 ```bash
 # Navigate to client directory
 cd client
 
-# Install dependencies and start dev server
+# Install dependencies
 npm install
-npm run dev
+
+# Configure environment variables
+cp .env.example .env
 ```
+
+Edit `client/.env` with your backend URLs (defaults work if running locally):
+```env
+VITE_API_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
+```
+
+Start the development server:
+```bash
+npm run dev
+# → http://localhost:5173
+```
+
+**Routes:**
+| Path | Page |
+|------|------|
+| `/` | Dashboard — real-time machine health grid |
+| `/machine/:machineId` | Machine Detail — telemetry history & charts |
+| `/manual-test` | Manual Prediction — send custom sensor values |
+
+> 📌 **Note**: The Express backend (`server/`) and FastAPI ML service (`ml-service/`) must both be running for the client to fully function. The navbar shows a live **Socket.io connection indicator** — green dot = connected to real-time data stream.
 
 ---
 
