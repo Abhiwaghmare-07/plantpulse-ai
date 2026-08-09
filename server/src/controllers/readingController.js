@@ -2,6 +2,7 @@ const axios = require('axios');
 const Machine = require('../models/Machine');
 const Reading = require('../models/Reading');
 const Alert = require('../models/Alert');
+const socketHandler = require('../socket/socketHandler');
 
 // Failure type → human-readable message map
 const FAILURE_MESSAGES = {
@@ -113,6 +114,19 @@ const createReading = async (req, res) => {
         predicted_failure_type: prediction.predicted_failure_type || null,
         message,
       });
+    }
+
+    // --- Emit real-time Socket.io events ---
+    socketHandler.emitMachineUpdate({
+      machineId: machine.machineId,
+      name: machine.name,
+      status: machine.status,
+      lastReading: machine.lastReading,
+      lastUpdated: machine.lastUpdated,
+      prediction,
+    });
+    if (alert) {
+      socketHandler.emitNewAlert(alert);
     }
 
     res.status(201).json({

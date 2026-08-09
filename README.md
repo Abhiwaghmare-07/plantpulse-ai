@@ -168,6 +168,55 @@ npm run dev
 
 ---
 
+## 🤖 Machine Degradation Simulator
+
+Since PlantPulse AI is a predictive maintenance system without physical IoT hardware, the project ships a **built-in machine degradation simulator** that streams realistic sensor telemetry in real time — making the dashboard feel alive during development and demos.
+
+### What it does
+
+The simulator automatically manages **4 demo machines** in MongoDB, each with a distinct health trajectory:
+
+| Machine | ID | Trajectory | Behaviour |
+|---|---|---|---|
+| Alpha Press Line | `SIM-ALPHA-01` | 🟢 Healthy | Small random fluctuations around stable baseline values |
+| Beta Milling Station | `SIM-BETA-02` | 🟢 Healthy | Small random fluctuations around stable baseline values |
+| Gamma Lathe Unit | `SIM-GAMMA-03` | 🟡 Degrading | Tool wear and torque rise steadily each tick — transitions Healthy → Warning |
+| Delta Grinder | `SIM-DELTA-04` | 🔴 Critical | Starts in warning state, rapidly degrades toward Critical with every tick |
+
+Every **5 seconds** (configurable), the simulator:
+1. Generates the next sensor reading for each machine based on its trajectory
+2. Calls the same controller logic as `POST /api/readings` directly (no HTTP overhead)
+3. The ML service scores the reading, the result is saved to MongoDB and emitted via Socket.io
+
+### Configuration
+
+Set these environment variables in `server/.env`:
+
+```env
+SIMULATOR_ENABLED=true          # Set to false to disable on startup
+SIMULATOR_INTERVAL_MS=5000      # Tick interval in ms (default: 5 seconds)
+```
+
+### Monitoring the simulator
+
+```bash
+# GET the live simulator status and current sensor values for all 4 machines
+GET http://localhost:5000/api/simulator/status
+```
+
+The console will print a formatted tick log every interval:
+
+```
+🤖 [Simulator] Tick #7  09:51:35
+────────────────────────────────────────────────────────────────────────
+  SIM-ALPHA-01     tw= 30.2 tq= 40.1 rpm=1503 prob=  0.0%  → Healthy
+  SIM-BETA-02      tw= 20.3 tq= 38.7 rpm=1496 prob=  0.0%  → Healthy
+  SIM-GAMMA-03     tw=101.5 tq= 50.2 rpm=1471 prob= 18.4%  → Warning
+  SIM-DELTA-04     tw=210.0 tq= 72.1 rpm=1381 prob= 99.9%  → Critical (OSF)
+```
+
+---
+
 ## 📊 Dataset & Model Performance
 
 The machine learning models are trained on the **AI4I 2020 Predictive Maintenance Dataset** (10,000 samples, 14 features):
