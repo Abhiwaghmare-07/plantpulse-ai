@@ -93,15 +93,20 @@ const createReading = async (req, res) => {
       status: prediction.status,
     });
 
+    // --- Track previous status to detect transitions ---
+    const previousStatus = machine.status;
+    const isNewStatus = prediction.status !== previousStatus;
+    const isWarningOrCritical = prediction.status === 'Warning' || prediction.status === 'Critical';
+
     // --- Update Machine document ---
     machine.status = prediction.status;
     machine.lastReading = { air_temperature, process_temperature, rotational_speed, torque, tool_wear };
     machine.lastUpdated = new Date();
     await machine.save();
 
-    // --- Create Alert if Warning or Critical ---
+    // --- Create Alert ONLY on status transitions into Warning or Critical ---
     let alert = null;
-    if (prediction.status === 'Warning' || prediction.status === 'Critical') {
+    if (isWarningOrCritical && isNewStatus) {
       const message = buildAlertMessage(
         machine.name,
         prediction.predicted_failure_type || prediction.status,
