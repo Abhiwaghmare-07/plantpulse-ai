@@ -1,6 +1,6 @@
 # 🏭 PlantPulse AI — Industrial Predictive Maintenance System
 
-> **Real-time machine failure prediction powered by a trained Random Forest ML model, a dedicated Python microservice, live WebSocket updates, and a full React monitoring dashboard.**
+> **Real-time machine failure prediction powered by a trained XGBoost ML model, a dedicated Python microservice, live WebSocket updates, and a full React monitoring dashboard.**
 
 PlantPulse AI is an end-to-end predictive maintenance platform built on the **AI4I 2020 Industrial Sensor Dataset**. It continuously monitors a fleet of industrial machines, processes their sensor readings through a trained ML pipeline, and surfaces failure predictions in real time — before a breakdown occurs. The project demonstrates a production-style architecture with a dedicated FastAPI ML microservice, an Express/MongoDB orchestration layer, Socket.io live updates, and a polished React dashboard — all wired together and running live.
 
@@ -93,7 +93,7 @@ The dataset is severely imbalanced: only **~3.4% of samples** contain a machine 
 - **SMOTE** (Synthetic Minority Over-sampling Technique) from `imbalanced-learn` is applied **only to the training split**, never to the test set
 - Recall is the primary evaluation metric — missing a real failure is far more costly than a false alarm
 
-### Binary Failure Prediction (`failure_model.pkl` — Random Forest / XGBoost)
+### Binary Failure Prediction (`failure_model.pkl` — XGBoost Classifier)
 
 | Metric | Score |
 |--------|-------|
@@ -276,7 +276,7 @@ plantpulse-ai/
 Most portfolio ML projects call a third-party API (like OpenAI) and wrap it in a frontend. PlantPulse AI does not do that.
 
 **1. A genuinely trained ML model, not an API wrapper.**
-The Random Forest model was trained from scratch on 10 000 real sensor samples, with honest handling of the 97:3 class imbalance using SMOTE. The model metrics — 80.88% recall on unseen data — reflect real performance on a hard problem, not cherry-picked numbers.
+The XGBoost model was trained from scratch on 10 000 real sensor samples, with honest handling of the 97:3 class imbalance using SMOTE. The model metrics — 80.88% recall on unseen data — reflect real performance on a hard problem, not cherry-picked numbers.
 
 **2. Production-style microservice architecture.**
 The ML model runs in its own isolated FastAPI process with its own dependencies, just as it would in a production system where the data science and backend teams operate independently. The Express server talks to it over HTTP, fails gracefully when it's down, and never exposes the model directly to the client.

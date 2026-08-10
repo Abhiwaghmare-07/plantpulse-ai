@@ -245,7 +245,7 @@ export default function ManualTest() {
             <h1 className="mt-header__title">Manual Prediction Test</h1>
             <p className="mt-header__desc">
               Enter arbitrary sensor values below and submit them directly to the trained
-              Random Forest ML model to get an instant failure prediction — without
+              XGBoost ML model to get an instant failure prediction — without
               affecting any live machine data. Use this to explore how individual sensor
               values influence the model's decision, or to demo the ML pipeline to anyone
               unfamiliar with the project.
