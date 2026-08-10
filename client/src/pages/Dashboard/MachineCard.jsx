@@ -43,8 +43,8 @@ export default function MachineCard({ machine }) {
 
   const r = machine.lastReading || {};
   const pred = machine.prediction || {};
-  const prob = pred.failure_probability ?? null;
-  const failType = pred.predicted_failure_type;
+  const prob = pred.failure_probability ?? machine.failure_probability ?? null;
+  const failType = pred.predicted_failure_type || machine.predicted_failure_type;
   const status = machine.status || 'Healthy';
   const statusKey = status.toLowerCase();
 

@@ -101,6 +101,12 @@ const createReading = async (req, res) => {
     // --- Update Machine document ---
     machine.status = prediction.status;
     machine.lastReading = { air_temperature, process_temperature, rotational_speed, torque, tool_wear };
+    machine.prediction = {
+      failure_probability: prediction.failure_probability,
+      predicted_failure_type: prediction.predicted_failure_type || null,
+      confidence: prediction.confidence || null,
+      status: prediction.status,
+    };
     machine.lastUpdated = new Date();
     await machine.save();
 

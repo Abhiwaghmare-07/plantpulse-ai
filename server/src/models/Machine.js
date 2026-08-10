@@ -29,6 +29,12 @@ const MachineSchema = new mongoose.Schema({
     torque: { type: Number },
     tool_wear: { type: Number },
   },
+  prediction: {
+    failure_probability: { type: Number },
+    predicted_failure_type: { type: String, default: null },
+    confidence: { type: Number },
+    status: { type: String },
+  },
   lastUpdated: {
     type: Date,
     default: Date.now,
