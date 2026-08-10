@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import api from '../../services/api';
 import SensorChart from './SensorChart';
-import WhyExplanation from './WhyExplanation';
+import WhyExplanation from '../../components/WhyExplanation/WhyExplanation';
 import './MachineDetail.css';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
